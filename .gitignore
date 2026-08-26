@@ -1,0 +1,33 @@
+# Dependencies
+node_modules/
+
+# Build Output
+dist/
+
+# Environment Files
+.env
+.env.local
+
+# Google Service Account Credentials
+resources-needs/
+credentials.json
+*.json.key
+
+# WhatsApp Session Auth Data
+auth_info_baileys/
+*.auth
+
+# Local Databases
+data/
+*.sqlite
+*.db
+
+# Logs
+logs/
+*.log
+
+# OS & IDE
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/

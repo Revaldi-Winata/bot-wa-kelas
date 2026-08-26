@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Bot Control Center - 07TPLP025</title>
+  <link rel="stylesheet" href="/static/css/styles.css">
+</head>
+<body>
+
+  <div id="toastContainer"></div>
+
+  <!-- Login Modal (Hidden by default to prevent flicker on refresh) -->
+  <div id="loginScreen" style="display: none;">
+    <div class="login-card">
+      <h2>Bot Control Center</h2>
+      <p>Masuk ke sistem manajemen kelas 07TPLP025.</p>
+      <form id="loginForm" onsubmit="handleLogin(event)">
+        <label>Username</label>
+        <input type="text" id="loginUsername" required autocomplete="username" value="07tplp025admin" />
+        <label>Password</label>
+        <input type="password" id="loginPassword" required autocomplete="current-password" placeholder="Masukkan password" />
+        <div id="loginError" style="color: #f87171; font-size: 0.72rem; margin-bottom: 10px; display: none;"></div>
+        <button type="submit" class="btn" style="width: 100%;">Masuk Dashboard</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Mobile App Header (Top) -->
+  <header class="app-header">
+    <div class="app-brand">
+      <div class="app-title">Bot Center</div>
+      <span class="badge-chip">07TPLP025</span>
+    </div>
+    <div class="header-status-pill" id="mobileStatusBadge">
+      <span class="dot"></span>
+      <span id="mobileStatusText">Connected</span>
+    </div>
+  </header>
+
+  <!-- Desktop Sidebar (>= 860px) -->
+  <aside id="desktopSidebar">
+    <div class="sidebar-header">
+      <div class="app-brand">
+        <div class="app-title">Bot Control Center</div>
+        <span class="badge-chip">07TPLP025</span>
+      </div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="switchTab('overview', this)">
+        <svg viewBox="0 0 24 24"><rect width="7" height="9" x="3" y="3" rx="1"/><rect width="7" height="5" x="14" y="3" rx="1"/><rect width="7" height="9" x="14" y="12" rx="1"/><rect width="7" height="5" x="3" y="16" rx="1"/></svg>
+        <span>Overview</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('schedules', this)">
+        <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+        <span>Jadwal</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('lecturers', this)">
+        <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Kontak Dosen</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('assignments', this)">
+        <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        <span>Tugas</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('whitelist', this)">
+        <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Anggota Kelas</span>
+      </button>
+      <button class="nav-item" onclick="switchTab('logs', this)">
+        <svg viewBox="0 0 24 24"><path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1-2.5-2.5Z"/><polyline points="10 6 10 10 14 10"/></svg>
+        <span>Log Sistem</span>
+      </button>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="header-status-pill" id="desktopStatusBadge" style="width: 100%; justify-content: space-between;">
+        <div style="display: flex; align-items: center; gap: 6px;">
+          <span class="dot"></span>
+          <span id="desktopStatusText">Connected</span>
+        </div>
+        <span id="desktopPhoneText" style="font-size: 0.68rem; opacity: 0.8;">+6281387484563</span>
+      </div>
+      <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 4px;">
+        <span style="font-size: 0.75rem; color: #fff; font-weight: 500;">Ketua Kelas</span>
+        <button class="icon-btn-danger" onclick="handleLogout()" style="font-size: 0.68rem; padding: 3px 8px;">Keluar</button>
+      </div>
+    </div>
+  </aside>
+
+  <!-- Scrollable App Content -->
+  <main class="app-container">
+    <!-- 1. Overview -->
+    <section id="tab-overview" class="tab-section active">
+      <!-- Hero WhatsApp Status Card -->
+      <div class="hero-status-card">
+        <div class="hero-status-top">
+          <div>
+            <div class="card-label">WhatsApp Status</div>
+            <div class="hero-phone-title" id="botPhoneText">+6281387484563</div>
+          </div>
+          <span class="badge badge-exam" id="botStatusBadgeText">CONNECTED</span>
+        </div>
+        <div class="hero-actions">
+          <button class="icon-btn-action" style="flex: 1; justify-content: center; padding: 7px 10px;" onclick="restartBot()">
+            <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span>Restart Socket</span>
+          </button>
+          <button class="icon-btn-action" style="flex: 1; justify-content: center; padding: 7px 10px;" onclick="syncWhitelist()">
+            <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <span>Sync Anggota</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- 2x2 Stats Grid -->
+      <div class="grid-stats-mobile">
+        <div class="stat-card-compact">
+          <div class="card-label">Mata Kuliah</div>
+          <div class="card-value" id="statSubjects">0</div>
+          <div class="card-meta">Terdaftar di DB</div>
+        </div>
+        <div class="stat-card-compact">
+          <div class="card-label">Tugas Aktif</div>
+          <div class="card-value" id="statTasks">0</div>
+          <div class="card-meta">Deadline berjalan</div>
+        </div>
+        <div class="stat-card-compact">
+          <div class="card-label">Whitelist DM</div>
+          <div class="card-value" id="statWhitelist">0</div>
+          <div class="card-meta">Anggota terdaftar</div>
+        </div>
+        <div class="stat-card-compact">
+          <div class="card-label">Semester</div>
+          <div class="card-value" style="font-size: 1.15rem;">16 Minggu</div>
+          <div class="card-meta">2 & 3 SKS Pattern</div>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="card">
+        <div class="card-title" style="margin-bottom: 8px;">Aksi Cepat</div>
+        <div class="quick-action-bar">
+          <button class="icon-btn-action" style="padding: 10px;" onclick="switchTab('assignments'); openAssignmentDialog();">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Tambah Tugas</span>
+          </button>
+          <button class="icon-btn-action" style="padding: 10px;" onclick="switchTab('schedules'); openSubjectDialog();">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Tambah Matkul</span>
+          </button>
+          <button class="icon-btn-action" style="padding: 10px;" onclick="switchTab('lecturers'); openLecturerDialog();">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Tambah Dosen</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Riwayat Pesan Bot (1 Minggu Terakhir) -->
+      <div class="card" style="margin-top: 14px;">
+        <div class="card-header" style="margin-bottom: 6px;">
+          <div>
+            <div class="card-title">Riwayat Pesan Bot</div>
+            <div style="font-size: 0.68rem; color: var(--text-dim);">Aktivitas pengiriman pesan dan broadcast bot (7 hari terakhir)</div>
+          </div>
+          <span class="badge" style="background: rgba(59, 130, 246, 0.1); color: #60a5fa; border: 1px solid rgba(59, 130, 246, 0.25);">10 Pesan Terakhir</span>
+        </div>
+        <div id="recentBotMessagesContainer" class="mobile-list-group" style="margin-top: 10px;"></div>
+      </div>
+
+      <!-- QR Box if required -->
+      <div id="qrCard" class="card" style="display: none;">
+        <div class="card-title" style="color: #facc15;">Pairing WhatsApp Diperlukan</div>
+        <div class="card-desc">Pindai QR Code berikut menggunakan WhatsApp di ponsel:</div>
+        <div style="display: flex; justify-content: center; padding: 12px; background: #000; border-radius: 6px; border: 1px solid var(--border);">
+          <img id="qrImage" src="" alt="WhatsApp QR Code" style="background: #fff; padding: 8px; border-radius: 6px; max-width: 180px;" />
+        </div>
+      </div>
+    </section>
+
+    <!-- 2. Schedules -->
+    <section id="tab-schedules" class="tab-section">
+      <div class="segmented-control">
+        <button class="segmented-btn active" id="btnViewCalendar" onclick="switchScheduleView('calendar')">Jadwal</button>
+        <button class="segmented-btn" id="btnViewWeekly" onclick="switchScheduleView('weekly')">Master Matkul</button>
+        <button class="segmented-btn" id="btnViewConfig" onclick="switchScheduleView('config')">Pengaturan</button>
+      </div>
+
+      <!-- View A: Kalender Semester (Drill-Down per Matkul) -->
+      <div id="view-calendar" class="schedule-view active">
+        <!-- Drill Down Header -->
+        <div id="drillDownHeader" class="drill-down-header" style="display: none;">
+          <div>
+            <div style="font-size: 0.9rem; font-weight: 600; color: #fff;" id="drillSubjectTitle">Basis Data</div>
+            <div style="margin-top: 2px;"><span id="drillSubjectSks" class="badge badge-3sks">3 SKS</span></div>
+          </div>
+          <button class="back-btn-chip" onclick="window.closeSubjectDrillDown()">
+            <span>← Kembali</span>
+          </button>
+        </div>
+
+        <!-- Filter Bar for Subject Timeline -->
+        <div id="calendarFilterBar" style="display: none; justify-content: space-between; align-items: center; gap: 6px; margin-bottom: 10px;">
+          <div style="font-size: 0.72rem; color: var(--text-dim);">Filter Minggu:</div>
+          <select id="filterWeekSelect" style="width: auto; margin-bottom: 0;" onchange="filterMeetingsTable()">
+            <option value="">Semua Minggu (1-16)</option>
+            <option value="1">Minggu 1</option><option value="2">Minggu 2</option><option value="3">Minggu 3</option>
+            <option value="4">Minggu 4</option><option value="5">Minggu 5</option><option value="6">Minggu 6</option>
+            <option value="7">Minggu 7</option><option value="8">Minggu 8 (UTS)</option><option value="9">Minggu 9</option>
+            <option value="10">Minggu 10</option><option value="11">Minggu 11</option><option value="12">Minggu 12</option>
+            <option value="13">Minggu 13</option><option value="14">Minggu 14</option><option value="15">Minggu 15</option>
+            <option value="16">Minggu 16 (UAS)</option>
+          </select>
+        </div>
+
+        <!-- Container (Subjects List OR Specific Timeline) -->
+        <div class="mobile-list-group" id="meetingsCardsMobile"></div>
+      </div>
+
+      <!-- View B: Master Mata Kuliah & Jadwal -->
+      <div id="view-weekly" class="schedule-view">
+        <div class="section-header">
+          <div class="section-title">Master Mata Kuliah</div>
+          <button class="icon-btn-action" onclick="openSubjectDialog()">
+            <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            <span>Tambah Matkul</span>
+          </button>
+        </div>
+        <div class="mobile-list-group" id="schedulesCardsMobile"></div>
+      </div>
+
+      <!-- View C: Pengaturan Semester (With Lock Switch) -->
+      <div id="view-config" class="schedule-view">
+        <div class="card">
+          <div class="card-title">Generator Kalender Semester</div>
+          <div class="card-desc">Atur tanggal mulai perkuliahan semester ganjil/genap untuk memproyeksikan seluruh 16 minggu jadwal secara otomatis.</div>
+
+          <!-- Lock Switch Protection -->
+          <div class="lock-toggle-box">
+            <div>
+              <div style="font-size: 0.76rem; font-weight: 600; color: #ededed;">Kunci Konfigurasi Semester</div>
+              <div style="font-size: 0.68rem; color: var(--text-dim); margin-top: 2px;" id="lockStatusText">Terkunci (Aman)</div>
+            </div>
+            <label class="switch">
+              <input type="checkbox" id="configLockSwitch" onchange="window.toggleConfigLock(this)">
+              <span class="slider"></span>
+            </label>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+            <div>
+              <label>Tanggal Mulai Perkuliahan</label>
+              <input type="date" id="semStartDate" value="2026-08-31" disabled required onchange="window.updateAutoEndDate(this.value)" />
+            </div>
+            <div>
+              <label>Tanggal Akhir (Sabtu UAS)</label>
+              <input type="date" id="semEndDate" disabled required />
+            </div>
+          </div>
+
+          <label>Nama Periode Semester</label>
+          <input type="text" id="semName" value="Semester Ganjil 2026/2027" disabled required />
+
+          <button class="btn" id="btnGenerateSemester" style="width: 100%;" disabled onclick="generateSemesterProjection()">
+            <span>Generate / Sinkronkan Kalender</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Dosen -->
+    <section id="tab-lecturers" class="tab-section">
+      <div class="section-header">
+        <div class="section-title">Dosen</div>
+        <button class="icon-btn-action" onclick="openLecturerDialog()">
+          <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span>Tambah Dosen</span>
+        </button>
+      </div>
+      <div class="mobile-list-group" id="lecturersCardsMobile"></div>
+    </section>
+
+    <!-- 4. Tugas -->
+    <section id="tab-assignments" class="tab-section">
+      <!-- View 4A: Tugas Aktif (Halaman Utama) -->
+      <div id="view-assignments-active">
+        <!-- Card Navigasi Arsip (Paling Atas di Bawah Topbar) -->
+        <div class="card" style="margin-bottom: 14px; cursor: pointer;" onclick="window.openArchivePage()">
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <div style="display: flex; align-items: center; gap: 10px;">
+              <div style="width: 32px; height: 32px; border-radius: 8px; background: #141418; border: 1px solid #22222a; display: flex; align-items: center; justify-content: center; color: #a1a1aa;">
+                <svg style="width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2;" viewBox="0 0 24 24"><polyline points="21 8 21 21 3 21 3 8"/><rect width="22" height="5" x="1" y="3"/><line x1="10" x2="14" y1="12" y2="12"/></svg>
+              </div>
+              <div>
+                <div class="card-title" style="margin-bottom: 2px;">Arsip Tugas Selesai</div>
+                <div style="font-size: 0.68rem; color: var(--text-dim);">Lihat riwayat tugas yang telah lewat masa deadline.</div>
+              </div>
+            </div>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span class="badge" id="archiveCountBadge" style="background: #18181f; color: #a1a1aa; border: 1px solid #282834;">0 Tugas</span>
+              <svg style="width: 14px; height: 14px; stroke: var(--text-dim); fill: none; stroke-width: 2;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="section-header">
+          <div class="section-title">Tugas Aktif</div>
+          <div style="display: flex; gap: 8px;">
+            <button class="icon-btn-action" style="color: #60a5fa; border-color: rgba(59, 130, 246, 0.3);" onclick="window.broadcastAllActiveAssignments()">
+              <svg viewBox="0 0 24 24"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+              <span>Broadcast Semua</span>
+            </button>
+            <button class="icon-btn-action" onclick="openAssignmentDialog()">
+              <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+              <span>Tambah Tugas</span>
+            </button>
+          </div>
+        </div>
+        <div class="mobile-list-group" id="assignmentsCardsMobile"></div>
+      </div>
+
+      <!-- View 4B: Halaman Arsip Tugas (Terpisah dengan Search & Filter) -->
+      <div id="view-assignments-archive" style="display: none;">
+        <div class="section-header" style="margin-bottom: 12px;">
+          <button class="icon-btn-action" onclick="window.closeArchivePage()">
+            <svg viewBox="0 0 24 24"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+            <span>Kembali</span>
+          </button>
+          <div class="section-title">Arsip Tugas Selesai</div>
+          <span class="badge" id="archiveDetailCountBadge">0 Tugas</span>
+        </div>
+
+        <!-- Search & Filter Bar -->
+        <div style="display: grid; grid-template-columns: 1.2fr 1fr; gap: 8px; margin-bottom: 12px;">
+          <input type="text" id="searchArchiveInput" placeholder="Cari judul tugas..." oninput="window.filterArchiveList()" />
+          <select id="filterArchiveSubject" onchange="window.filterArchiveList()">
+            <option value="">Semua Mata Kuliah</option>
+          </select>
+        </div>
+
+        <div class="mobile-list-group" id="archiveCardsList"></div>
+      </div>
+    </section>
+
+    <!-- 5. Anggota Kelas -->
+    <section id="tab-whitelist" class="tab-section">
+      <div class="segmented-control">
+        <button class="segmented-btn active" id="btnWlMembers" onclick="switchWhitelistView('members')">Mahasiswa</button>
+        <button class="segmented-btn" id="btnWlGroup" onclick="switchWhitelistView('group')">Grup Kelas</button>
+        <button class="segmented-btn" id="btnWlSubjects" onclick="switchWhitelistView('subjects')">Grup Matkul</button>
+      </div>
+
+      <!-- Subview 1: Daftar Mahasiswa (Whitelist) -->
+      <div id="view-wl-members" class="whitelist-subview">
+        <div class="section-header">
+          <div class="section-title">Daftar Mahasiswa Terdaftar</div>
+          <span class="badge" id="whitelistCountBadge">0 Mahasiswa</span>
+        </div>
+        <input type="text" id="searchWhitelistInput" placeholder="Cari nama / nomor HP mahasiswa..." oninput="filterWhitelistTable()" style="margin-bottom: 10px;" />
+        <div class="mobile-list-group" id="whitelistCardsMobile"></div>
+      </div>
+
+      <!-- Subview 2: Grup WhatsApp Kelas (Utama) -->
+      <div id="view-wl-group" class="whitelist-subview" style="display: none;">
+        <div class="card">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+            <div class="card-title">Grup WhatsApp Kelas</div>
+            <span class="badge" id="groupStatusBadge" style="background: #18181f; color: #a1a1aa; border: 1px solid #282834;">Memuat...</span>
+          </div>
+          <div class="card-desc">Tentukan grup WhatsApp utama yang menjadi target broadcast harian (04:00, 07:10, tugas) dan sumber sinkronisasi anggota kelas.</div>
+          
+          <div style="margin-bottom: 12px;">
+            <label style="font-size: 0.7rem; color: var(--text-dim); display: block; margin-bottom: 4px;">Pilih Grup Utama Kelas</label>
+            <select id="selectClassGroup" style="margin-bottom: 0;" onchange="window.saveClassGroupSelection(this.value)">
+              <option value="">-- Memuat daftar grup WhatsApp... --</option>
+            </select>
+          </div>
+
+          <button class="btn" style="width: 100%;" onclick="syncWhitelist()">
+            <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span>Sinkronkan Anggota Grup Ini</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Subview 3: Grup Khusus Mata Kuliah -->
+      <div id="view-wl-subjects" class="whitelist-subview" style="display: none;">
+        <div class="card" style="margin-bottom: 10px;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px;">
+            <div class="card-title">Grup Khusus Mata Kuliah</div>
+            <span class="badge" style="background: #18181f; color: #a1a1aa; border: 1px solid #282834;">Target Broadcast</span>
+          </div>
+          <div class="card-desc">Atur grup tujuan pengiriman broadcast materi/tugas per mata kuliah (opsional). Di grup mata kuliah, bot bersifat pasif (hanya kirim pesan jadwal/tugas, tidak melayani perintah /menu).</div>
+        </div>
+        <div id="subjectGroupsMappingContainer" class="mobile-list-group"></div>
+      </div>
+    </section>
+
+    <!-- 6. Audit Logs -->
+    <section id="tab-logs" class="tab-section">
+      <div class="section-header">
+        <div class="section-title">Log Aktivitas Sistem</div>
+        <button class="icon-btn-action" onclick="loadLogs()">
+          <svg viewBox="0 0 24 24"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <div class="mobile-list-card" style="padding: 10px 14px; margin-bottom: 12px; font-size: 0.72rem; color: var(--text-dim); display: flex; justify-content: space-between; align-items: center;">
+        <span>Filter Kategori Log:</span>
+        <select id="logCategoryFilter" onchange="loadLogs()" style="width: auto; padding: 4px 8px; font-size: 0.72rem;">
+          <option value="">Semua Kategori</option>
+          <option value="BOT_MESSAGE">Interaksi Bot WA</option>
+          <option value="SCHEDULER">Pengingat Jadwal</option>
+          <option value="BROADCAST_TUGAS">Broadcast Tugas</option>
+          <option value="BOT_SYNC">Sinkronisasi Grup</option>
+          <option value="CRUD_JADWAL">Perubahan Jadwal</option>
+          <option value="CRUD_TUGAS">Perubahan Tugas</option>
+          <option value="AUTH">Login & Sesi</option>
+        </select>
+      </div>
+
+      <div class="mobile-list-group" id="logsListContainer"></div>
+    </section>
+  </main>
+
+  <!-- Mobile Bottom Navigation (Fixed) -->
+  <nav class="bottom-nav">
+    <button class="nav-tab-btn active" id="btnTabOverview" onclick="switchMobileNav('overview', this)">
+      <svg viewBox="0 0 24 24"><path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+      <span>Overview</span>
+    </button>
+    <button class="nav-tab-btn" id="btnTabSchedules" onclick="switchMobileNav('schedules', this)">
+      <svg viewBox="0 0 24 24"><rect width="18" height="18" x="3" y="4" rx="2" ry="2"/><line x1="16" x2="16" y1="2" y2="6"/><line x1="8" x2="8" y1="2" y2="6"/><line x1="3" x2="21" y1="10" y2="10"/></svg>
+      <span>Jadwal</span>
+    </button>
+    <button class="nav-tab-btn" id="btnTabLecturers" onclick="switchMobileNav('lecturers', this)">
+      <svg viewBox="0 0 24 24"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      <span>Dosen</span>
+    </button>
+    <button class="nav-tab-btn" id="btnTabAssignments" onclick="switchMobileNav('assignments', this)">
+      <svg viewBox="0 0 24 24"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+      <span>Tugas</span>
+    </button>
+    <button class="nav-tab-btn" id="btnTabMore" onclick="openMoreSheet()">
+      <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      <span>Lainnya</span>
+    </button>
+  </nav>
+
+  <!-- Mobile Action Sheet (More Options) -->
+  <div id="moreSheet" onclick="closeMoreSheet(event)">
+    <div class="more-sheet-content">
+      <div class="sheet-header">
+        <div class="sheet-title">Menu Tambahan</div>
+        <button class="modal-close-btn" onclick="closeMoreSheet(null, true)">
+          <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+          <span>Tutup</span>
+        </button>
+      </div>
+      <div class="sheet-item" onclick="switchFromSheet('academic')">
+        <span>Informasi Akademik (UJIKOM & TOEFL)</span>
+        <span style="color: var(--text-dim);"><svg style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></span>
+      </div>
+      <div class="sheet-item" onclick="switchFromSheet('whitelist')">
+        <span>Anggota Kelas (Grup & Whitelist)</span>
+        <span style="color: var(--text-dim);"><svg style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></span>
+      </div>
+      <div class="sheet-item" onclick="switchFromSheet('logs')">
+        <span>Log Aktivitas Sistem</span>
+        <span style="color: var(--text-dim);"><svg style="width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 2;" viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg></span>
+      </div>
+      <div class="sheet-item" style="border-color: rgba(239, 68, 68, 0.2); color: #f87171;" onclick="handleLogout()">
+        <span>Keluar Sesi</span>
+        <span><svg style="width: 14px; height: 14px; stroke: #f87171; fill: none; stroke-width: 2;" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg></span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Dialogs -->
+  <dialog id="dialogSubject">
+    <div class="dialog-header">
+      <div class="dialog-title" id="dialogSubjectTitle">Tambah Mata Kuliah</div>
+      <button class="modal-close-btn" onclick="this.closest('dialog').close()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span>Batal</span>
+      </button>
+    </div>
+    <form onsubmit="saveSubject(event)">
+      <input type="hidden" id="subSubjectId" />
+      <input type="hidden" id="subScheduleId" />
+      
+      <label>Nama Mata Kuliah</label>
+      <input id="subName" placeholder="Contoh: Pemrograman Web Lanjut" required />
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div>
+          <label>Bobot SKS</label>
+          <select id="subSks" required>
+            <option value="2">2 SKS</option>
+            <option value="3" selected>3 SKS</option>
+            <option value="4">4 SKS</option>
+            <option value="1">1 SKS</option>
+          </select>
+        </div>
+        <div>
+          <label>Kode Matkul (Opsional)</label>
+          <input id="subCode" placeholder="Contoh: TPL025" />
+        </div>
+      </div>
+
+      <label>Dosen Pengampu</label>
+      <select id="subLecturer">
+        <option value="">-- Belum Ada Dosen --</option>
+      </select>
+
+      <div style="font-size: 0.72rem; font-weight: 600; color: var(--text-dim); margin-top: 10px; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.04em;">Jadwal Perkuliahan Mingguan</div>
+
+      <label>Hari Kuliah</label>
+      <select id="subDay" required>
+        <option value="1">Senin</option><option value="2">Selasa</option>
+        <option value="3">Rabu</option><option value="4">Kamis</option>
+        <option value="5">Jumat</option><option value="6">Sabtu</option>
+      </select>
+
+      <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px;">
+        <div><label>Jam Mulai</label><input id="subStart" type="time" required value="08:00" /></div>
+        <div><label>Jam Selesai</label><input id="subEnd" type="time" required value="10:30" /></div>
+      </div>
+
+      <label>Ruangan Perkuliahan</label>
+      <input id="subRoom" placeholder="Contoh: V.401 / Lab 3" required />
+
+      <label>Catatan Umum Matkul (Opsional)</label>
+      <textarea id="subNotes" rows="2" placeholder="Contoh: Wajib bawa laptop & install Docker..."></textarea>
+
+      <button type="submit" class="btn" style="width: 100%; margin-top: 8px;">Simpan Mata Kuliah</button>
+    </form>
+  </dialog>
+
+  <dialog id="dialogEditMeeting">
+    <div class="dialog-header">
+      <div class="dialog-title">Ubah Status Sesi Pertemuan</div>
+      <button class="modal-close-btn" onclick="this.closest('dialog').close()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span>Batal</span>
+      </button>
+    </div>
+    <form onsubmit="saveMeetingEdit(event)">
+      <input type="hidden" id="editMeetingId" />
+      <label>Tipe Sesi Pertemuan</label>
+      <select id="editSessionType" required>
+        <option value="OFFLINE">Tatap Muka (Offline)</option>
+        <option value="ELEARNING">E-Learning (LMS Mentari)</option>
+        <option value="ZOOM">Kuliah Online (Zoom / Virtual)</option>
+        <option value="LIBUR">Libur / Ditiadakan</option>
+        <option value="UTS">Ujian Tengah Semester (UTS)</option>
+        <option value="UAS">Ujian Akhir Semester (UAS)</option>
+      </select>
+
+      <label>URL Modul Pertemuan Mentari UNPAM (Opsional)</label>
+      <input id="editMentariUrl" placeholder="https://mentari.unpam.ac.id/u-courses/..._PERTEMUAN_N" />
+
+      <label>Catatan Khusus Pertemuan (Instruksi Mahasiswa / Topik)</label>
+      <input id="editNotes" placeholder="Contoh: Bawa laptop & kumpul resume bab 1" />
+
+      <button type="submit" class="btn" style="width: 100%; margin-top: 10px;">Simpan Perubahan</button>
+    </form>
+  </dialog>
+
+  <dialog id="dialogLecturer">
+    <div class="dialog-header">
+      <div class="dialog-title" id="dialogLecturerTitle">Tambah Dosen</div>
+      <button class="modal-close-btn" onclick="this.closest('dialog').close()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span>Batal</span>
+      </button>
+    </div>
+    <form onsubmit="saveLecturer(event)">
+      <input type="hidden" id="lecId" />
+      <label>Nama Lengkap & Gelar Dosen</label>
+      <input id="lecName" placeholder="Contoh: Dr. Budi Santoso, M.Kom" required />
+      <label>Nomor WhatsApp</label>
+      <input id="lecPhone" placeholder="081234567890" required />
+      <label>Mata Kuliah yang Diampu</label>
+      <select id="lecSubject"><option value="">-- Pilih Mata Kuliah --</option></select>
+      <label>Catatan Jam Kerja / Info Khusus (Opsional)</label>
+      <input id="lecNotes" placeholder="Contoh: Hubungi jam kerja (08:00 - 17:00)" />
+      <button type="submit" class="btn" style="width: 100%; margin-top: 4px;">Simpan Dosen</button>
+    </form>
+  </dialog>
+
+  <dialog id="dialogAssignment">
+    <div class="dialog-header">
+      <div class="dialog-title" id="dialogAssignmentTitle">Tambah Tugas</div>
+      <button class="modal-close-btn" onclick="this.closest('dialog').close()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span>Batal</span>
+      </button>
+    </div>
+    <form onsubmit="saveAssignment(event)">
+      <input type="hidden" id="asId" />
+      <label>Mata Kuliah</label>
+      <select id="asSubject" required onchange="window.updateMeetingOptionsForSubject(this.value)"></select>
+      <label>Judul Tugas</label>
+      <input id="asTitle" placeholder="Contoh: Makalah Normalisasi Database & ERD" required />
+      <label>Pertemuan Ke-</label>
+      <select id="asMeeting" required onchange="window.updateDeadlineFromMeeting(this.value)"></select>
+      <label>Batas Waktu (Deadline)</label>
+      <input id="asDeadline" type="datetime-local" required />
+      <label>Link Pengumpulan / Google Drive (Opsional)</label>
+      <input id="asUrl" placeholder="https://drive.google.com/..." />
+      <label>Deskripsi & Instruksi Tugas (Opsional)</label>
+      <textarea id="asDesc" rows="2" placeholder="Instruksi pengerjaan tugas..."></textarea>
+      <button type="submit" class="btn" style="width: 100%; margin-top: 4px;">Simpan Tugas</button>
+    </form>
+  </dialog>
+
+  <dialog id="dialogEditMember">
+    <div class="dialog-header">
+      <div class="dialog-title">Ubah Nama Mahasiswa</div>
+      <button class="modal-close-btn" onclick="this.closest('dialog').close()">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        <span>Batal</span>
+      </button>
+    </div>
+    <form onsubmit="saveMemberName(event)">
+      <input type="hidden" id="editMemberId" />
+      <label>Nomor / ID Akun</label>
+      <input id="editMemberPhone" disabled style="opacity: 0.6; cursor: not-allowed;" />
+      <label>Nama Mahasiswa</label>
+      <input id="editMemberName" placeholder="Contoh: Budi Santoso" required />
+      <button type="submit" class="btn" style="width: 100%; margin-top: 4px;">Simpan Nama</button>
+    </form>
+  </dialog>
+
+  <dialog id="confirmDialog">
+    <div class="dialog-header">
+      <div class="dialog-title" id="confirmTitle">Konfirmasi Hapus</div>
+    </div>
+    <p id="confirmMessage" style="font-size: 0.78rem; color: var(--text-muted); margin-bottom: 16px; line-height: 1.4;">Apakah Anda yakin ingin menghapus data ini?</p>
+    <div style="display: flex; justify-content: flex-end; gap: 8px;">
+      <button type="button" class="btn btn-secondary btn-sm" onclick="document.getElementById('confirmDialog').close()">Batal</button>
+      <button type="button" class="btn btn-ghost-danger btn-sm" id="confirmActionBtn">Hapus</button>
+    </div>
+  </dialog>
+
+  <script type="module" src="/static/js/app.js"></script>
+</body>
+</html>
