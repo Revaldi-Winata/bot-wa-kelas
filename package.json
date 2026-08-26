@@ -24,7 +24,6 @@
     "@whiskeysockets/baileys": "^6.7.13",
     "bcryptjs": "^3.0.2",
     "dotenv": "^16.4.7",
-    "googleapis": "^144.0.0",
     "hono": "^4.7.0",
     "jsonwebtoken": "^9.0.2",
     "node-cron": "^3.0.3",
