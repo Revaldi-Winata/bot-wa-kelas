@@ -31,3 +31,7 @@ logs/
 Thumbs.db
 .vscode/
 .idea/
+
+# Requirements & Docs
+requirements/
+docs/
